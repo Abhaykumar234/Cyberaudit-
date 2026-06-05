@@ -1,0 +1,142 @@
+================================================================
+          DATABASE PERMISSION ISSUE - DIAGNOSIS & FIX
+================================================================
+
+STATUS: Backend started but crashed due to permissions
+
+ISSUE IDENTIFIED:
+-----------------
+ERROR: must be owner of table audit_logs
+ERROR: permission denied for table vulnerabilities
+
+ROOT CAUSE:
+-----------
+1. Database tables exist and were created by user 'abhay'
+2. Application is configured to connect as 'cyberaudit_user'
+3. cyberaudit_user doesn't have permission to modify tables owned by abhay
+4. Spring Boot tries to update table schema on startup → FAILS
+
+TABLE OWNERSHIP (from your output):
+-----------------------------------
+Schema |       Name        | Type  | Owner
+-------+-------------------+-------+-------
+public | audit_logs        | table | abhay
+public | simulated_targets | table | abhay
+public | users             | table | abhay
+public | vulnerabilities   | table | abhay
+
+APPLICATION CONFIG (application.yml):
+--------------------------------------
+username: cyberaudit_user
+password: cyberaudit123
+
+MISMATCH: Tables owned by 'abhay', app connects as 'cyberaudit_user'
+
+================================================================
+                    SOLUTION (Choose ONE)
+================================================================
+
+OPTION 1: Fix Permissions (RECOMMENDED)
+----------------------------------------
+Transfer table ownership to cyberaudit_user
+
+Run these commands:
+
+psql -U postgres -d cyberaudit_db -h localhost -p 5433
+
+Then execute:
+
+ALTER TABLE audit_logs OWNER TO cyberaudit_user;
+ALTER TABLE simulated_targets OWNER TO cyberaudit_user;
+ALTER TABLE vulnerabilities OWNER TO cyberaudit_user;
+ALTER TABLE users OWNER TO cyberaudit_user;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO cyberaudit_user;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO cyberaudit_user;
+\q
+
+Then restart backend:
+.\START_BACKEND.ps1
+
+
+OPTION 2: Use 'abhay' User Instead
+-----------------------------------
+Edit application.yml in project root:
+
+datasource:
+  username: abhay
+  password: Abhay@1880
+
+Then restart backend:
+.\START_BACKEND.ps1
+
+
+OPTION 3: Fresh Start (Nuclear Option)
+---------------------------------------
+Drop and recreate database with correct owner:
+
+psql -U postgres -h localhost -p 5433
+
+DROP DATABASE cyberaudit_db;
+CREATE DATABASE cyberaudit_db OWNER cyberaudit_user;
+\q
+
+Then restart backend (it will recreate tables):
+.\START_BACKEND.ps1
+
+================================================================
+                    RECOMMENDED APPROACH
+================================================================
+
+Use OPTION 1 to fix permissions. This is the cleanest solution.
+
+Quick commands:
+---------------
+1. psql -U postgres -d cyberaudit_db -h localhost -p 5433
+
+2. Paste these 4 lines:
+   ALTER TABLE audit_logs OWNER TO cyberaudit_user;
+   ALTER TABLE simulated_targets OWNER TO cyberaudit_user;
+   ALTER TABLE vulnerabilities OWNER TO cyberaudit_user;
+   ALTER TABLE users OWNER TO cyberaudit_user;
+
+3. Paste these 2 lines:
+   GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO cyberaudit_user;
+   GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO cyberaudit_user;
+
+4. Type: \q
+
+5. Run: .\START_BACKEND.ps1
+
+================================================================
+                    WHY THIS HAPPENED
+================================================================
+
+The tables were likely created previously when:
+- You were testing with a different user (abhay)
+- Or another application created them
+- Or you manually created them as user abhay
+
+Spring Boot's 'ddl-auto: update' tries to modify tables on startup,
+but fails if the connecting user doesn't own the tables.
+
+================================================================
+                    VERIFICATION
+================================================================
+
+After fixing permissions, verify with:
+
+psql -U postgres -d cyberaudit_db -h localhost -p 5433
+SELECT tablename, tableowner FROM pg_tables WHERE schemaname = 'public';
+
+Expected output:
+      tablename      |   tableowner
+---------------------+-----------------
+ audit_logs         | cyberaudit_user
+ simulated_targets  | cyberaudit_user
+ users              | cyberaudit_user
+ vulnerabilities    | cyberaudit_user
+
+================================================================
+
+NEED HELP? See FIX_PERMISSIONS_MANUAL.txt for detailed steps
+================================================================

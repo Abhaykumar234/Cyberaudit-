@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: cyberaudit-pro
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:change-this-jwt-secret-to-a-long-random-string-at-least-32-chars}
+    expiration-ms: 86400000
+  admin:
+    username: admin
+    password: changeme
+    email: admin@cyberaudit.local
+  anthropic:
+    api-key: ${ANTHROPIC_API_KEY:}
+    model: claude-sonnet-4-20250514
+  cors:
+    allowed-origins: http://localhost:5173,http://localhost:3000

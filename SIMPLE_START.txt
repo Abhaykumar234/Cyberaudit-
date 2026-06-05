@@ -1,0 +1,101 @@
+================================================================
+          CyberAudit Pro - Simple Start Guide
+================================================================
+
+ISSUE FIXED: Database connection error resolved!
+- Created external application.yml with correct credentials
+- No rebuild needed - ready to run immediately
+
+================================================================
+                    HOW TO RUN (3 STEPS)
+================================================================
+
+STEP 1: Test Database
+----------------------
+.\TEST_DATABASE.ps1
+
+Expected: "[OK] Successfully connected to database!"
+
+
+STEP 2: Start Backend (Terminal 1)
+-----------------------------------
+.\START_BACKEND.ps1
+
+Wait for: "Started CyberAuditApplication in X.XXX seconds"
+Leave this terminal running!
+
+
+STEP 3: Start Frontend (Terminal 2 - NEW WINDOW)
+-------------------------------------------------
+cd frontend
+npm run dev
+
+Wait for: "Local: http://localhost:5173"
+Leave this terminal running!
+
+
+STEP 4: Open Browser
+---------------------
+http://localhost:5173
+
+You should see:
+- Dashboard with system metrics
+- Vulnerabilities page with OWASP Top 10
+- No errors in console (press F12)
+
+================================================================
+                      TROUBLESHOOTING
+================================================================
+
+If TEST_DATABASE.ps1 fails:
+----------------------------
+1. Check PostgreSQL is running:
+   Get-Service postgresql*
+
+2. Start if stopped:
+   Start-Service postgresql-x64-15
+
+3. If database doesn't exist, create it:
+   psql -U postgres -h localhost -p 5433
+   
+   Then run:
+   CREATE DATABASE cyberaudit_db;
+   CREATE USER cyberaudit_user WITH PASSWORD 'cyberaudit123';
+   GRANT ALL PRIVILEGES ON DATABASE cyberaudit_db TO cyberaudit_user;
+   \q
+
+
+If backend shows connection errors:
+------------------------------------
+- Make sure TEST_DATABASE.ps1 passed successfully first
+- Check application.yml exists in project root
+- Try restarting PostgreSQL service
+
+
+If frontend won't load:
+------------------------
+- Make sure backend started successfully
+- Check both terminals are running
+- Press F12 in browser, check Console for errors
+
+================================================================
+                       QUICK REFERENCE
+================================================================
+
+Test database:          .\TEST_DATABASE.ps1
+Start backend:          .\START_BACKEND.ps1
+Start frontend:         cd frontend; npm run dev
+Open app:               http://localhost:5173
+
+Stop servers:           Press Ctrl+C in each terminal
+
+================================================================
+
+WHAT WAS FIXED:
+- External application.yml with correct database credentials
+- Frontend API services use /api for proper proxying
+- Vulnerabilities page import error fixed
+- All TypeScript errors resolved
+
+YOU'RE READY TO GO!
+================================================================

@@ -1,0 +1,39 @@
+# Backend
+target/
+.classpath
+.project
+.settings/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+.DS_Store
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Frontend
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+*.pem
+
+# IDE
+.vscode/
+.sublime-project
+.sublime-workspace
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Build
+build/
+out/
+
+# Maven
+.m2/

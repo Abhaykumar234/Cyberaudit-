@@ -1,0 +1,194 @@
+═══════════════════════════════════════════════════════════
+  CYBERAUDIT PRO - HOW TO RUN THE APPLICATION
+═══════════════════════════════════════════════════════════
+
+🎯 QUICK START (Recommended)
+────────────────────────────────────────────────────────────
+
+Run this single command to start everything:
+
+    .\START_FULL_APP.ps1
+
+This will:
+  1. ✓ Verify Java 21 is available
+  2. ✓ Check PostgreSQL is running
+  3. ✓ Build backend with new scanner code
+  4. ✓ Start backend server (port 8080)
+  5. ✓ Start frontend server (port 5173)
+
+
+🔧 MANUAL START (Alternative)
+────────────────────────────────────────────────────────────
+
+If you prefer manual control:
+
+STEP 1: Build Backend
+    .\mvnw.cmd clean package -DskipTests
+
+STEP 2: Start Backend
+    java -jar target\cyberaudit-pro-1.0.0-latest.jar
+
+STEP 3: Start Frontend (in new terminal)
+    cd frontend
+    npm install
+    npm run dev
+
+
+🌐 ACCESS THE APPLICATION
+────────────────────────────────────────────────────────────
+
+Frontend:  http://localhost:5173
+Backend:   http://localhost:8080/api
+
+Login Credentials:
+  Username: admin
+  Password: admin123
+
+
+📡 TEST THE REAL-TIME SCANNER
+────────────────────────────────────────────────────────────
+
+Option 1 - Web Interface:
+  1. Login at http://localhost:5173
+  2. Click "Real-Time Scanner" in navigation
+  3. Enter target URL (e.g., https://example.com)
+  4. Click "Start Scan"
+  5. Watch REAL vulnerability scanning in action!
+
+Option 2 - API Test:
+  Run: .\TEST_SCANNER.ps1
+  
+  This will test the scanner API and show results
+
+
+🔍 WHAT THE SCANNER DOES (Real Functionality)
+────────────────────────────────────────────────────────────
+
+✓ Port Scanning
+  Checks 17 common ports: FTP (21), SSH (22), Telnet (23), 
+  HTTP (80), HTTPS (443), MySQL (3306), PostgreSQL (5432), 
+  RDP (3389), MongoDB (27017), and more
+
+✓ Security Headers Analysis
+  Validates presence of:
+  - X-Frame-Options (clickjacking protection)
+  - Strict-Transport-Security (HSTS)
+  - Content-Security-Policy (XSS protection)
+  - X-Content-Type-Options (MIME sniffing)
+  - X-XSS-Protection
+
+✓ SSL/TLS Configuration
+  Checks if HTTPS is enabled
+  Warns about plain HTTP connections
+
+✓ Exposed Path Discovery
+  Tests for publicly accessible sensitive paths:
+  - /.git (source code exposure)
+  - /.env (environment variables)
+  - /admin (admin panels)
+  - /backup (backup files)
+
+✓ Vulnerability Pattern Detection
+  Identifies potential SQL injection vectors
+  Checks for common security misconfigurations
+
+
+💾 DATA PERSISTENCE
+────────────────────────────────────────────────────────────
+
+All discovered vulnerabilities are automatically saved to:
+  Database: cyberaudit_db
+  Table: vulnerabilities
+
+Each finding includes:
+  - CVE-style identifier (e.g., SCAN-OP-12345)
+  - Severity level (CRITICAL/HIGH/MEDIUM/LOW)
+  - Category (NETWORK, SECURITY_HEADERS, etc.)
+  - Remediation advice
+  - Occurrence tracking
+
+
+🎨 FEATURES IMPLEMENTED
+────────────────────────────────────────────────────────────
+
+✓ Professional Material Design UI
+  - 50+ color palette
+  - Glass-morphism effects
+  - Material Symbols icons
+  - Gradient backgrounds
+
+✓ Complete Pages
+  - Dashboard (metrics & charts)
+  - Vulnerabilities (management & tracking)
+  - Real-Time Scanner (NEW!)
+  - Targets (endpoint management)
+  - Audit Logs (activity tracking)
+  - Labs (practice environments)
+
+✓ Backend Architecture
+  - Spring Boot 3.3.0
+  - PostgreSQL database
+  - RESTful APIs
+  - Async processing
+  - JWT authentication
+
+
+🐛 TROUBLESHOOTING
+────────────────────────────────────────────────────────────
+
+Problem: Build fails with Java version error
+Solution: Ensure Java 21 is installed at:
+          C:\Program Files\Eclipse Adoptium\jdk-21.0.11.10-hotspot
+
+Problem: "Database connection failed"
+Solution: Start PostgreSQL service
+          Verify connection: psql -U abhay -d cyberaudit_db -p 5433
+
+Problem: Frontend can't connect to backend
+Solution: Ensure backend is running on port 8080
+          Check: http://localhost:8080/api/scan/status
+
+Problem: Port already in use
+Solution: 
+  Backend (8080): Stop existing Java processes
+  Frontend (5173): Stop existing npm/node processes
+
+
+📊 API ENDPOINTS (Real Scanner)
+────────────────────────────────────────────────────────────
+
+GET  /api/scan/status
+     Returns scanner health and capabilities
+
+POST /api/scan/url
+     Body: {"url": "https://example.com"}
+     Scans any URL immediately
+
+POST /api/scan/target/{targetId}
+     Scans an existing target from database
+
+
+💡 TIPS
+────────────────────────────────────────────────────────────
+
+• Try scanning different websites to see varied results
+• Scan your own projects to find real security issues
+• Check the database to see findings are persisted
+• Watch the backend console for detailed scan logs
+• All scans are REAL - no mock data!
+
+
+🎯 SUCCESS INDICATORS
+────────────────────────────────────────────────────────────
+
+✓ Backend shows "Started CyberAuditApplication"
+✓ Frontend shows "ready in XXXms" 
+✓ Login page loads at http://localhost:5173
+✓ Scanner page shows "Real-Time Vulnerability Scanner"
+✓ Test scan returns actual findings
+✓ Database contains discovered vulnerabilities
+
+
+═══════════════════════════════════════════════════════════
+              READY TO SCAN! 🚀
+═══════════════════════════════════════════════════════════

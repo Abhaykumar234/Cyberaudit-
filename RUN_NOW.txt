@@ -1,0 +1,113 @@
+╔═══════════════════════════════════════════════════════════════════╗
+║          CyberAudit Pro - FIXED & READY TO RUN                    ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+ISSUE IDENTIFIED:
+The error "password authentication failed for user postgres" means
+the JAR was built with OLD database credentials.
+
+SOLUTION:
+I created an EXTERNAL application.yml file that overrides the 
+internal configuration. NO REBUILD NEEDED!
+
+═══════════════════════════════════════════════════════════════════
+
+RUN THESE COMMANDS (3 STEPS):
+
+STEP 1: Test Database (30 seconds)
+────────────────────────────────────
+.\TEST_DATABASE.ps1
+
+Expected: "✓ Successfully connected to database!"
+
+If this fails, your PostgreSQL needs setup.
+
+
+STEP 2: Start Backend (Terminal 1)
+────────────────────────────────────
+.\START_BACKEND.ps1
+
+Wait for: "Started CyberAuditApplication in X.XXX seconds"
+
+
+STEP 3: Start Frontend (Terminal 2)
+────────────────────────────────────
+cd frontend
+npm run dev
+
+Wait for: "Local: http://localhost:5173"
+
+═══════════════════════════════════════════════════════════════════
+
+OPEN BROWSER:
+http://localhost:5173
+
+YOU SHOULD SEE:
+✓ Dashboard with metrics
+✓ Vulnerabilities page with OWASP Top 10
+✓ Targets page with 3 targets
+✓ No errors in console (F12)
+
+═══════════════════════════════════════════════════════════════════
+
+TROUBLESHOOTING:
+
+If TEST_DATABASE.ps1 fails:
+---------------------------
+1. Check PostgreSQL is running:
+   Get-Service postgresql*
+
+2. If stopped, start it:
+   Start-Service postgresql-x64-15
+
+3. If database doesn't exist:
+   psql -U postgres -h localhost -p 5433
+   CREATE DATABASE cyberaudit_db;
+   CREATE USER cyberaudit_user WITH PASSWORD 'cyberaudit123';
+   GRANT ALL PRIVILEGES ON DATABASE cyberaudit_db TO cyberaudit_user;
+
+
+If backend won't start:
+-----------------------
+1. Make sure database test passed first
+2. Check external application.yml exists in project root
+3. Check Java 21: java -version
+
+
+If frontend shows errors:
+--------------------------
+1. Make sure backend started successfully first
+2. Check: cd frontend; npm install
+3. Press F12 in browser, check Console and Network tabs
+
+═══════════════════════════════════════════════════════════════════
+
+FILES CREATED FOR YOU:
+
+application.yml          - External config with correct DB credentials
+TEST_DATABASE.ps1        - Test PostgreSQL connection  
+START_BACKEND.ps1        - Start backend with external config
+FIX_AND_RUN.md          - Detailed explanation
+RUN_NOW.txt             - This file
+
+═══════════════════════════════════════════════════════════════════
+
+WHAT WAS FIXED:
+
+✅ All 6 frontend API services now use /api (proxy-enabled)
+✅ Database credentials: cyberaudit_user/cyberaudit123 on port 5433
+✅ Vulnerabilities page import error fixed
+✅ External application.yml overrides old JAR config
+✅ No rebuild needed!
+
+═══════════════════════════════════════════════════════════════════
+
+START NOW:
+
+.\TEST_DATABASE.ps1         (verify database)
+.\START_BACKEND.ps1         (start backend)
+cd frontend; npm run dev    (start frontend in new terminal)
+
+Then open: http://localhost:5173
+
+═══════════════════════════════════════════════════════════════════
