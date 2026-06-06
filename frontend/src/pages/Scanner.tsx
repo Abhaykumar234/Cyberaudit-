@@ -28,8 +28,11 @@ export default function Scanner() {
       
       const scanResult = await scanUrl(targetUrl)
       setResult(scanResult)
-    } catch (err) {
-      setError('Scan failed: ' + (err as Error).message)
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
+        (err as Error).message
+      setError('Scan failed: ' + message)
       console.error(err)
     } finally {
       setScanning(false)

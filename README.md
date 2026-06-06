@@ -1,272 +1,114 @@
-# CyberAudit Pro - Full Stack Application
+# CyberAudit Pro
 
-A comprehensive security audit and vulnerability management platform built with Spring Boot and React.
+Full-stack security audit and vulnerability management platform.
 
-## Project Structure
+## Features
 
-```
-cyberaudit-pro/
-├── pom.xml                          # Maven configuration
-├── src/main/java/com/cyberaudit/
-│   ├── CyberAuditApplication.java   # Main Spring Boot application
-│   ├── config/                      # Configuration classes
-│   │   ├── SecurityConfig.java      # Spring Security & CORS
-│   │   ├── RestTemplateConfig.java  # REST client configuration
-│   │   └── DataInitializer.java     # Database initialization
-│   ├── controller/                  # REST API endpoints
-│   │   ├── AuditController.java
-│   │   ├── LabController.java
-│   │   ├── VulnerabilityController.java
-│   │   ├── AuditLogController.java
-│   │   ├── MetricsController.java
-│   │   └── TargetController.java
-│   ├── service/                     # Business logic
-│   │   ├── ClaudeAiService.java     # Claude AI integration
-│   │   ├── AuditLogService.java
-│   │   ├── VulnerabilityService.java
-│   │   ├── MetricsService.java
-│   │   └── SimulatedTargetService.java
-│   ├── model/                       # JPA entities
-│   │   ├── AuditLog.java
-│   │   ├── Vulnerability.java
-│   │   ├── SimulatedTarget.java
-│   │   ├── User.java
-│   │   └── enums/
-│   │       ├── Role.java
-│   │       ├── Severity.java
-│   │       └── Status.java
-│   ├── dto/                         # Data Transfer Objects
-│   │   ├── AuditRequest.java
-│   │   ├── AuditResponse.java
-│   │   ├── LabRequest.java
-│   │   ├── LabResponse.java
-│   │   ├── FindingDto.java
-│   │   └── MetricsDto.java
-│   └── repository/                  # JPA repositories
-│       ├── AuditLogRepository.java
-│       ├── VulnerabilityRepository.java
-│       ├── SimulatedTargetRepository.java
-│       └── UserRepository.java
-├── src/main/resources/
-│   ├── application.yml              # Main configuration
-│   └── application-dev.yml          # Development configuration
-├── frontend/                        # React + Vite frontend
-│   ├── package.json
-│   ├── vite.config.ts
-│   └── src/
-│       └── api/
-│           ├── auditApi.ts
-│           ├── labApi.ts
-│           ├── metricsApi.ts
-│           └── vulnerabilityApi.ts
-└── README.md
-```
-
-## Technology Stack
-
-### Backend
-- **Java 21** with Spring Boot 3.3
-- **Spring Security** for authentication & authorization
-- **Spring Data JPA** for database access
-- **PostgreSQL** (production) / H2 (development)
-- **Maven** for dependency management
-- **Lombok** for boilerplate reduction
-
-### Frontend
-- **React 18** with TypeScript
-- **Vite** for fast development
-- **Axios** for HTTP requests
-- **React Router** for navigation
+- **JWT authentication** — register/login with role-based access
+- **Real-time vulnerability scanner** — port scan, security headers, SSL checks, path discovery
+- **AI-powered audits** — Claude API deep analysis (optional, requires API key)
+- **Secure coding labs** — AI code vulnerability analysis
+- **Audit trail** — server-side SOC 2 style event logging
+- **Vulnerability catalog** — persisted findings from scans and audits
 
 ## Prerequisites
 
-- Java 21 or higher
-- Maven 3.8+
-- Node.js 18+ and npm
-- PostgreSQL 14+ (for production)
+- **Java 21** (Eclipse Temurin recommended)
+- **Node.js 18+** and npm
+- **Anthropic API key** (optional, for AI audit and labs)
 
-## Setup Instructions
+## Quick Start (Windows)
 
-### Backend Setup
+### 1. Start the backend
 
-1. **Clone and navigate to project:**
-   ```bash
-   cd cyberaudit-pro
-   ```
-
-2. **Configure database (application.yml):**
-   - For development: Uses H2 in-memory database (default)
-   - For production: Update PostgreSQL connection details
-
-3. **Build the project:**
-   ```bash
-   mvn clean install
-   ```
-
-4. **Run the application:**
-   ```bash
-   mvn spring-boot:run
-   ```
-
-   The backend will start on `http://localhost:8080/api`
-
-5. **Access H2 Console (dev only):**
-   ```
-   http://localhost:8080/api/h2-console
-   ```
-
-### Frontend Setup
-
-1. **Navigate to frontend directory:**
-   ```bash
-   cd frontend
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Start development server:**
-   ```bash
-   npm run dev
-   ```
-
-   The frontend will start on `http://localhost:5173`
-
-## API Endpoints
-
-### Audit Management
-- `POST /api/audit/generate` - Generate security audit
-- `GET /api/audit/health` - Check audit service health
-
-### Lab Evaluation
-- `POST /api/lab/evaluate` - Evaluate secure coding lab
-- `GET /api/lab/health` - Check lab service health
-
-### Vulnerabilities
-- `GET /api/vulnerabilities` - List all vulnerabilities
-- `GET /api/vulnerabilities/{id}` - Get vulnerability details
-- `GET /api/vulnerabilities/severity/{severity}` - Filter by severity
-- `GET /api/vulnerabilities/category/{category}` - Filter by category
-- `POST /api/vulnerabilities` - Create vulnerability
-- `PUT /api/vulnerabilities/{id}` - Update vulnerability
-
-### Audit Logs
-- `GET /api/logs` - List all audit logs
-- `GET /api/logs/user/{userId}` - Get logs by user
-- `GET /api/logs/severity/{severity}` - Filter by severity
-- `GET /api/logs/category/{category}` - Filter by category
-- `POST /api/logs` - Create audit log
-
-### Metrics
-- `GET /api/metrics/system` - Get system metrics
-
-### Targets
-- `GET /api/targets` - List all targets
-- `GET /api/targets/{id}` - Get target details
-- `GET /api/targets/environment/{environment}` - Filter by environment
-- `POST /api/targets` - Create target
-- `PUT /api/targets/{id}` - Update target
-- `DELETE /api/targets/{id}` - Delete target
-
-## Configuration
-
-### Security
-- CORS enabled for `http://localhost:5173` and `http://localhost:3000`
-- Session-based authentication (Spring Session)
-- CSRF protection disabled for API endpoints
-
-### Database
-- **Development**: H2 in-memory database with auto-schema creation
-- **Production**: PostgreSQL with connection pooling
-
-### Logging
-- Root level: INFO
-- Application level: DEBUG
-- Security level: DEBUG
-
-## Development Workflow
-
-1. **Backend changes:**
-   - Modify Java files in `src/main/java`
-   - Spring Boot will auto-reload on save
-   - Check logs for errors
-
-2. **Frontend changes:**
-   - Modify React components in `frontend/src`
-   - Vite will hot-reload automatically
-   - API calls proxy to backend via Vite config
-
-3. **Database changes:**
-   - Modify entity classes
-   - Hibernate will auto-update schema (dev mode)
-   - For production, use migration tools
-
-## Building for Production
-
-### Backend
-```bash
-mvn clean package
-java -jar target/cyberaudit-pro-1.0.0.jar
+```powershell
+cd "Cyberaudit Pro"
+.\START_BACKEND.ps1
 ```
 
-### Frontend
-```bash
+Default login: **admin** / **changeme**
+
+### 2. Start the frontend (new terminal)
+
+```powershell
 cd frontend
-npm run build
-# Output in frontend/dist/
+npm install
+npm run dev
 ```
+
+Open http://localhost:5173
+
+### 3. Optional: enable AI features
+
+```powershell
+$env:ANTHROPIC_API_KEY = "your-anthropic-api-key"
+```
+
+Restart the backend after setting the key.
+
+## Workflow
+
+1. Sign in at `/login`
+2. **Audit Targets** → add a real endpoint you own or have permission to test
+3. **Dashboard** → **Run Security Scan** (real network/header scan, no API key needed)
+4. **Real-Time Scanner** → scan any URL directly
+5. **AI Deep Audit** → requires `ANTHROPIC_API_KEY`
+6. **Secure Coding Labs** → paste code for AI analysis (requires API key)
+7. **SOC 2 Audit Trail** → view server-generated security events
 
 ## Environment Variables
 
-Create `.env` file in frontend directory:
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SPRING_PROFILES_ACTIVE` | `dev` | `dev` = H2 in-memory, `prod` = PostgreSQL |
+| `JWT_SECRET` | (dev default) | JWT signing secret — **change in production** |
+| `ADMIN_USERNAME` | `admin` | Initial admin username |
+| `ADMIN_PASSWORD` | `changeme` | Initial admin password — **change in production** |
+| `ANTHROPIC_API_KEY` | — | Required for AI audit and labs |
+| `DATABASE_URL` | — | PostgreSQL URL (prod profile) |
+| `DATABASE_USERNAME` | — | PostgreSQL user (prod profile) |
+| `DATABASE_PASSWORD` | — | PostgreSQL password (prod profile) |
+
+Copy `.env.example` for a template.
+
+## Production
+
+```powershell
+$env:SPRING_PROFILES_ACTIVE = "prod"
+$env:DATABASE_URL = "jdbc:postgresql://host:5432/cyberaudit"
+$env:DATABASE_USERNAME = "user"
+$env:DATABASE_PASSWORD = "secret"
+$env:JWT_SECRET = "long-random-secret-at-least-32-characters"
+$env:ADMIN_PASSWORD = "strong-password"
+$env:ANTHROPIC_API_KEY = "your-key"
 ```
-VITE_API_URL=http://localhost:8080/api
+
+Build:
+
+```powershell
+$env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-21.0.11.10-hotspot"
+java "-Dmaven.multiModuleProjectDirectory=$PWD" -cp ".mvn\wrapper\maven-wrapper.jar" org.apache.maven.wrapper.MavenWrapperMain clean package -DskipTests
+java -jar target\cyberaudit-pro-1.0.0.jar
 ```
 
-## Troubleshooting
+## API
 
-### Port Already in Use
-- Backend: Change `server.port` in `application.yml`
-- Frontend: Change port in `vite.config.ts`
+Base URL: `http://localhost:8080/api`
 
-### Database Connection Issues
-- Ensure PostgreSQL is running (production)
-- Check connection details in `application.yml`
-- For H2 (dev), no setup needed
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/auth/login` | POST | No | Login |
+| `/auth/register` | POST | No | Register |
+| `/targets` | GET/POST | Yes | Manage audit targets |
+| `/scan/url` | POST | Yes | Scan a URL |
+| `/scan/target/{id}` | POST | Yes | Scan registered target |
+| `/audit/generate` | POST | Yes | AI security audit |
+| `/lab/evaluate` | POST | Yes | AI code analysis |
+| `/vulnerabilities` | GET | Yes | List findings |
+| `/metrics/system` | GET | Yes | Dashboard metrics |
+| `/logs` | GET | Yes | Audit trail |
 
-### CORS Errors
-- Verify frontend URL is in `corsConfigurationSource()` in SecurityConfig
-- Check browser console for specific error
+## Tech Stack
 
-### API Not Responding
-- Verify backend is running: `curl http://localhost:8080/api/audit/health`
-- Check firewall settings
-- Review application logs
-
-## Next Steps
-
-1. **Integrate Claude AI API:**
-   - Add Anthropic SDK to pom.xml
-   - Implement actual API calls in `ClaudeAiService`
-   - Add API key configuration
-
-2. **Add Authentication:**
-   - Implement JWT tokens
-   - Add user registration/login endpoints
-   - Secure sensitive endpoints
-
-3. **Frontend Components:**
-   - Build React components for each page
-   - Implement state management (Redux/Zustand)
-   - Add styling with design system colors
-
-4. **Testing:**
-   - Add unit tests for services
-   - Add integration tests for controllers
-   - Add E2E tests for frontend
-
-## License
-
-Proprietary - CyberAudit Pro
+- **Backend:** Java 21, Spring Boot 3.3, Spring Security, JWT, JPA, H2/PostgreSQL
+- **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, Axios

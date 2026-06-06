@@ -66,6 +66,10 @@ public class ClaudeAiService {
         return response;
     }
 
+    public boolean isConfigured() {
+        return apiKey != null && !apiKey.isBlank();
+    }
+
     public LabResponse evaluateLab(String mission, String codeSnippet, String language, String sourceIp) {
         String prompt = buildLabPrompt(mission, codeSnippet, language);
         String claudeText = callClaudeApi(prompt);

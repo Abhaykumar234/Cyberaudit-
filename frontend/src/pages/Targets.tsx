@@ -5,7 +5,7 @@ import Loading from '../components/Loading'
 const emptyForm = {
   name: '',
   environment: 'Production',
-  targetType: 'API',
+  targetType: 'Web Application',
   endpoint: '',
   description: '',
   assetsInScope: 1,
@@ -41,17 +41,24 @@ export default function Targets() {
     e.preventDefault()
     try {
       setSaving(true)
+      setError(null)
       await createTarget({
-        ...form,
-        postureScore: 100,
-        activeFindings: 0,
-        remediationRate: 100,
+        name: form.name,
+        environment: form.environment,
+        targetType: form.targetType,
+        endpoint: form.endpoint,
+        description: form.description,
+        assetsInScope: form.assetsInScope,
       })
       setForm(emptyForm)
       setShowForm(false)
       await fetchTargets()
-    } catch (err) {
-      setError('Failed to create target: ' + (err as Error).message)
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { error?: string; details?: Record<string, string> } } })
+          ?.response?.data?.error ||
+        (err as Error).message
+      setError('Failed to create target: ' + message)
     } finally {
       setSaving(false)
     }
@@ -83,7 +90,7 @@ export default function Targets() {
           <div>
             <h1 className="font-h1 text-h1 text-text-primary tracking-tight">Audit Targets</h1>
             <p className="font-body-md text-text-muted mt-1">
-              Register real infrastructure endpoints for AI security scanning.
+              Register real endpoints to scan — websites, APIs, or applications you own or have permission to test.
             </p>
           </div>
           <button
@@ -104,14 +111,14 @@ export default function Targets() {
           <form onSubmit={handleCreate} className="glass-panel rounded-xl p-gutter space-y-stack-md">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter">
               <input
-                placeholder="Target name"
+                placeholder="Target name (e.g. Production API)"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 required
                 className="bg-surface-container-high border border-border-glass rounded-lg py-2 px-4 text-body-sm"
               />
               <input
-                placeholder="Endpoint URL or host"
+                placeholder="Endpoint URL (e.g. https://api.example.com)"
                 value={form.endpoint}
                 onChange={(e) => setForm({ ...form, endpoint: e.target.value })}
                 required
@@ -127,7 +134,7 @@ export default function Targets() {
                 <option>Development</option>
               </select>
               <input
-                placeholder="Target type (API, Web, Cloud...)"
+                placeholder="Target type (Web Application, API, Cloud...)"
                 value={form.targetType}
                 onChange={(e) => setForm({ ...form, targetType: e.target.value })}
                 required
@@ -135,7 +142,7 @@ export default function Targets() {
               />
             </div>
             <textarea
-              placeholder="Description"
+              placeholder="Description (optional)"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               rows={2}
@@ -151,27 +158,6 @@ export default function Targets() {
           </form>
         )}
 
-        <div className="flex gap-3 flex-wrap">
-          {[
-            { id: 'all', label: 'All' },
-            { id: 'production', label: 'Production' },
-            { id: 'staging', label: 'Staging' },
-            { id: 'development', label: 'Development' },
-          ].map((btn) => (
-            <button
-              key={btn.id}
-              onClick={() => setFilter(btn.id)}
-              className={`px-4 py-2 rounded-lg font-body-sm ${
-                filter === btn.id
-                  ? 'bg-primary text-white font-semibold'
-                  : 'bg-surface-container-high text-text-muted border border-border-glass'
-              }`}
-            >
-              {btn.label}
-            </button>
-          ))}
-        </div>
-
         {filteredTargets.length === 0 ? (
           <p className="text-text-muted text-center py-12">
             No audit targets yet. Add one to start scanning.
@@ -183,22 +169,25 @@ export default function Targets() {
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-h3 text-[20px] text-text-primary">{target.name}</h3>
-                    <p className="text-text-muted text-body-sm mt-1">{target.endpoint}</p>
+                    <p className="text-primary text-body-sm mt-1 break-all">{target.endpoint}</p>
                   </div>
                   <span className="font-label-caps text-[10px] px-2 py-1 rounded font-bold uppercase bg-primary/10 text-primary">
                     {target.environment}
                   </span>
                 </div>
-                <p className="text-body-sm text-text-muted">{target.description}</p>
-                <div className="flex gap-2 mt-auto">
-                  <span className="text-body-sm text-text-muted">{target.targetType}</span>
-                  <button
-                    onClick={() => handleDelete(target.id)}
-                    className="ml-auto text-danger-rose text-body-sm hover:underline"
-                  >
-                    Delete
-                  </button>
+                {target.description && (
+                  <p className="text-body-sm text-text-muted">{target.description}</p>
+                )}
+                <div className="flex justify-between text-body-sm font-code-sm border-t border-border-glass/50 pt-3">
+                  <span className="text-text-muted">Posture: {target.postureScore}%</span>
+                  <span className="text-danger-rose">{target.activeFindings} findings</span>
                 </div>
+                <button
+                  onClick={() => handleDelete(target.id)}
+                  className="text-danger-rose text-body-sm hover:underline text-left"
+                >
+                  Delete
+                </button>
               </div>
             ))}
           </div>

@@ -1,39 +1,38 @@
-# Backend
+# Build
 target/
-.classpath
-.project
-.settings/
-*.class
 *.jar
-*.war
-*.ear
-*.log
-.DS_Store
-.idea/
-*.iml
-*.iws
-*.ipr
-
-# Frontend
-node_modules/
-dist/
-.env
-.env.local
-.env.*.local
-*.pem
+*.jar.original
+*.class
 
 # IDE
+.idea/
+*.iml
 .vscode/
-.sublime-project
-.sublime-workspace
+*.swp
+*.swo
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# Secrets & local config
+.env
+.env.local
+application-local.yml
 
 # OS
-Thumbs.db
 .DS_Store
+Thumbs.db
+desktop.ini
 
-# Build
-build/
-out/
+# Logs
+*.log
+logs/
 
-# Maven
-.m2/
+# Maven wrapper cache (keep jar)
+!.mvn/wrapper/maven-wrapper.jar
+
+# Old compiled output
+target/classes/

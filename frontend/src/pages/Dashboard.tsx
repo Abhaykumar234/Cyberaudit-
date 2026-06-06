@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { getSystemMetrics } from '../api/metricsApi'
 import { getAllVulnerabilities } from '../api/vulnerabilityApi'
 import { generateAudit } from '../api/auditApi'
 import { getTargets } from '../api/targetApi'
+import { scanTarget } from '../api/scanApi'
 import Loading from '../components/Loading'
 
 interface Metrics {
@@ -20,8 +22,6 @@ interface Vulnerability {
   title: string
   description: string
   severity: string
-  occurrences: number
-  affectedEndpoints: number
 }
 
 const severityStyles: Record<string, { bg: string; text: string }> = {
@@ -36,6 +36,7 @@ export default function Dashboard() {
   const [vulnerabilities, setVulnerabilities] = useState<Vulnerability[]>([])
   const [loading, setLoading] = useState(true)
   const [scanning, setScanning] = useState(false)
+  const [aiScanning, setAiScanning] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [scanMessage, setScanMessage] = useState<string | null>(null)
 
@@ -60,20 +61,20 @@ export default function Dashboard() {
     }
   }
 
-  const runScan = async () => {
+  const runSecurityScan = async () => {
     try {
       setScanning(true)
       setScanMessage(null)
       setError(null)
       const targets = await getTargets()
-      const targetId = targets.length > 0 ? String(targets[0].id) : 'default'
-      const result = await generateAudit({
-        targetId,
-        auditType: 'FULL',
-        scope: 'application',
-        includeRemediationAdvice: true,
-      })
-      setScanMessage(`Scan complete: ${result.findingsCount} findings (${result.criticalCount} critical)`)
+      if (targets.length === 0) {
+        setError('No audit targets registered. Add a target first.')
+        return
+      }
+      const result = await scanTarget(targets[0].id)
+      setScanMessage(
+        `Scan complete on ${targets[0].endpoint}: ${result.findings.length} findings (${result.severityCount.CRITICAL} critical)`
+      )
       await fetchData()
     } catch (err: unknown) {
       const message =
@@ -82,6 +83,36 @@ export default function Dashboard() {
       setError('Scan failed: ' + message)
     } finally {
       setScanning(false)
+    }
+  }
+
+  const runAiAudit = async () => {
+    try {
+      setAiScanning(true)
+      setScanMessage(null)
+      setError(null)
+      const targets = await getTargets()
+      if (targets.length === 0) {
+        setError('No audit targets registered. Add a target first.')
+        return
+      }
+      const result = await generateAudit({
+        targetId: String(targets[0].id),
+        auditType: 'FULL',
+        scope: targets[0].endpoint,
+        includeRemediationAdvice: true,
+      })
+      setScanMessage(
+        `AI audit complete: ${result.findingsCount} findings (${result.criticalCount} critical)`
+      )
+      await fetchData()
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
+        (err as Error).message
+      setError('AI audit failed: ' + message)
+    } finally {
+      setAiScanning(false)
     }
   }
 
@@ -98,19 +129,31 @@ export default function Dashboard() {
               Vulnerability Intelligence
             </h1>
             <p className="font-body-md text-text-muted mt-1">
-              Live metrics from your audit targets and findings.
+              Live metrics from real scans of your registered targets.
             </p>
           </div>
-          <button
-            onClick={runScan}
-            disabled={scanning}
-            className="bg-primary px-6 py-2 rounded font-body-sm text-white font-semibold hover:opacity-90 transition-opacity flex items-center gap-2 disabled:opacity-50"
-          >
-            <span className="material-symbols-outlined text-[18px]">
-              {scanning ? 'hourglass_bottom' : 'radar'}
-            </span>
-            {scanning ? 'Scanning...' : 'Run AI Security Scan'}
-          </button>
+          <div className="flex gap-3 flex-wrap">
+            <button
+              onClick={runSecurityScan}
+              disabled={scanning || aiScanning}
+              className="bg-primary px-6 py-2 rounded font-body-sm text-white font-semibold hover:opacity-90 transition-opacity flex items-center gap-2 disabled:opacity-50"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                {scanning ? 'hourglass_bottom' : 'radar'}
+              </span>
+              {scanning ? 'Scanning...' : 'Run Security Scan'}
+            </button>
+            <button
+              onClick={runAiAudit}
+              disabled={scanning || aiScanning}
+              className="bg-surface-container-high px-6 py-2 rounded font-body-sm text-text-primary border border-border-glass hover:bg-surface-container-highest transition-colors flex items-center gap-2 disabled:opacity-50"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                {aiScanning ? 'hourglass_bottom' : 'psychology'}
+              </span>
+              {aiScanning ? 'Analyzing...' : 'AI Deep Audit'}
+            </button>
+          </div>
         </div>
 
         {scanMessage && (
@@ -153,21 +196,17 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="glass-panel p-gutter rounded-xl">
-          <p className="font-label-caps text-text-muted mb-gutter">SEVERITY DISTRIBUTION</p>
-          <div className="flex gap-6 text-body-sm font-code-sm">
-            <span>Critical: {metrics.criticalCount}</span>
-            <span>High: {metrics.highCount}</span>
-            <span>Medium: {metrics.mediumCount ?? 0}</span>
-          </div>
-        </div>
-
         <div>
           <h2 className="font-h2 text-h2 text-text-primary mb-stack-lg">Recent Findings</h2>
           {vulnerabilities.length === 0 ? (
-            <p className="text-text-muted">
-              No findings yet. Add an audit target and run an AI security scan.
-            </p>
+            <div className="glass-panel p-gutter rounded-xl text-center">
+              <p className="text-text-muted mb-4">
+                No findings yet. Register a target and run a security scan.
+              </p>
+              <Link to="/targets" className="text-primary font-semibold hover:underline">
+                Add your first audit target →
+              </Link>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gutter">
               {vulnerabilities.map((vuln) => {

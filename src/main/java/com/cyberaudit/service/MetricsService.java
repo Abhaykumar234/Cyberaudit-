@@ -3,7 +3,7 @@ package com.cyberaudit.service;
 import com.cyberaudit.dto.MetricsDto;
 import com.cyberaudit.model.enums.Severity;
 import com.cyberaudit.model.enums.Status;
-import com.cyberaudit.repository.SimulatedTargetRepository;
+import com.cyberaudit.repository.AuditTargetRepository;
 import com.cyberaudit.repository.VulnerabilityRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,11 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class MetricsService {
 
     private final VulnerabilityRepository vulnerabilityRepository;
-    private final SimulatedTargetRepository targetRepository;
+    private final AuditTargetRepository targetRepository;
 
     public MetricsService(
             VulnerabilityRepository vulnerabilityRepository,
-            SimulatedTargetRepository targetRepository) {
+            AuditTargetRepository targetRepository) {
         this.vulnerabilityRepository = vulnerabilityRepository;
         this.targetRepository = targetRepository;
     }

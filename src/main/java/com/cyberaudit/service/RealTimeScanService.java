@@ -1,15 +1,17 @@
 package com.cyberaudit.service;
 
-import com.cyberaudit.model.SimulatedTarget;
+import com.cyberaudit.model.AuditTarget;
 import com.cyberaudit.model.Vulnerability;
 import com.cyberaudit.model.enums.Severity;
 import com.cyberaudit.model.enums.Status;
-import com.cyberaudit.repository.SimulatedTargetRepository;
+import com.cyberaudit.repository.AuditTargetRepository;
 import com.cyberaudit.repository.VulnerabilityRepository;
 import com.cyberaudit.scanner.VulnerabilityScanner;
+import com.cyberaudit.security.UserPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -21,40 +23,65 @@ public class RealTimeScanService {
     private static final Logger logger = LoggerFactory.getLogger(RealTimeScanService.class);
 
     private final VulnerabilityScanner vulnerabilityScanner;
-    private final SimulatedTargetRepository targetRepository;
+    private final AuditTargetRepository targetRepository;
     private final VulnerabilityRepository vulnerabilityRepository;
+    private final AuditTrailService auditTrailService;
 
     public RealTimeScanService(
             VulnerabilityScanner vulnerabilityScanner,
-            SimulatedTargetRepository targetRepository,
-            VulnerabilityRepository vulnerabilityRepository) {
+            AuditTargetRepository targetRepository,
+            VulnerabilityRepository vulnerabilityRepository,
+            AuditTrailService auditTrailService) {
         this.vulnerabilityScanner = vulnerabilityScanner;
         this.targetRepository = targetRepository;
         this.vulnerabilityRepository = vulnerabilityRepository;
+        this.auditTrailService = auditTrailService;
     }
 
     @Async
-    public CompletableFuture<VulnerabilityScanner.ScanResult> scanTargetAsync(Long targetId) {
-        logger.info("Starting async scan for target ID: {}", targetId);
+    public CompletableFuture<VulnerabilityScanner.ScanResult> scanTargetAsync(Long targetId, String sourceIp) {
+        return CompletableFuture.completedFuture(scanTargetSync(targetId, sourceIp));
+    }
 
-        SimulatedTarget target = targetRepository.findById(targetId)
+    public VulnerabilityScanner.ScanResult scanTargetSync(Long targetId, String sourceIp) {
+        logger.info("Starting scan for target ID: {}", targetId);
+
+        AuditTarget target = targetRepository.findById(targetId)
                 .orElseThrow(() -> new IllegalArgumentException("Target not found: " + targetId));
 
-        String scanUrl = normalizeUrl(target.getEndpoint());
-        VulnerabilityScanner.ScanResult scanResult = vulnerabilityScanner.scanTarget(scanUrl);
+        VulnerabilityScanner.ScanResult scanResult = vulnerabilityScanner.scanTarget(target.getEndpoint());
 
         saveDiscoveredVulnerabilities(scanResult);
         updateTargetMetrics(target, scanResult);
 
-        logger.info("Completed scan for target: {}. Found {} issues", target.getName(),
-                scanResult.getFindings().size());
+        auditTrailService.log(
+                currentUsername(),
+                "TARGET_SCANNED",
+                "Scanned " + target.getEndpoint() + " — " + scanResult.getFindings().size() + " findings",
+                scanResult.getSeverityCount().getOrDefault("CRITICAL", 0) > 0 ? Severity.CRITICAL : Severity.MEDIUM,
+                "SCAN",
+                sourceIp,
+                target.getEndpoint());
 
-        return CompletableFuture.completedFuture(scanResult);
+        return scanResult;
     }
 
-    public VulnerabilityScanner.ScanResult scanTargetSync(String targetUrl) {
-        logger.info("Starting synchronous scan for URL: {}", targetUrl);
-        return vulnerabilityScanner.scanTarget(normalizeUrl(targetUrl));
+    public VulnerabilityScanner.ScanResult scanUrlSync(String targetUrl, String sourceIp) {
+        String normalized = normalizeUrl(targetUrl);
+        VulnerabilityScanner.ScanResult scanResult = vulnerabilityScanner.scanTarget(normalized);
+
+        saveDiscoveredVulnerabilities(scanResult);
+
+        auditTrailService.log(
+                currentUsername(),
+                "URL_SCANNED",
+                "Scanned " + normalized + " — " + scanResult.getFindings().size() + " findings",
+                scanResult.getSeverityCount().getOrDefault("CRITICAL", 0) > 0 ? Severity.CRITICAL : Severity.MEDIUM,
+                "SCAN",
+                sourceIp,
+                normalized);
+
+        return scanResult;
     }
 
     private void saveDiscoveredVulnerabilities(VulnerabilityScanner.ScanResult scanResult) {
@@ -88,9 +115,8 @@ public class RealTimeScanService {
         }
     }
 
-    private void updateTargetMetrics(SimulatedTarget target, VulnerabilityScanner.ScanResult scanResult) {
-        int activeFindings = scanResult.getFindings().size();
-        target.setActiveFindings(activeFindings);
+    private void updateTargetMetrics(AuditTarget target, VulnerabilityScanner.ScanResult scanResult) {
+        target.setActiveFindings(scanResult.getFindings().size());
 
         int criticalCount = scanResult.getSeverityCount().getOrDefault("CRITICAL", 0);
         int highCount = scanResult.getSeverityCount().getOrDefault("HIGH", 0);
@@ -98,9 +124,7 @@ public class RealTimeScanService {
         int lowCount = scanResult.getSeverityCount().getOrDefault("LOW", 0);
 
         double score = 100.0 - (criticalCount * 20 + highCount * 10 + mediumCount * 5 + lowCount * 2);
-        score = Math.max(0, Math.min(100, score));
-
-        target.setPostureScore((int) Math.round(score));
+        target.setPostureScore((int) Math.round(Math.max(0, Math.min(100, score))));
         targetRepository.save(target);
     }
 
@@ -120,11 +144,19 @@ public class RealTimeScanService {
 
     private String normalizeUrl(String endpoint) {
         if (endpoint == null || endpoint.isBlank()) {
-            throw new IllegalArgumentException("Target endpoint is required");
+            throw new IllegalArgumentException("Target URL is required");
         }
         if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
             return endpoint;
         }
         return "https://" + endpoint;
+    }
+
+    private String currentUsername() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof UserPrincipal principal) {
+            return principal.getUsername();
+        }
+        return "system";
     }
 }

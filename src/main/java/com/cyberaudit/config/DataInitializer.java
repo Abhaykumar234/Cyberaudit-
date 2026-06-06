@@ -20,23 +20,16 @@ public class DataInitializer {
             @Value("${app.admin.password}") String adminPassword,
             @Value("${app.admin.email}") String adminEmail) {
         return args -> {
-            userRepository.findByUsername(adminUsername).ifPresentOrElse(
-                    user -> {
-                        user.setPassword(passwordEncoder.encode(adminPassword));
-                        user.setEnabled(true);
-                        user.setRole(Role.SUPER_ADMIN);
-                        userRepository.save(user);
-                    },
-                    () -> {
-                        User admin = new User();
-                        admin.setUsername(adminUsername);
-                        admin.setPassword(passwordEncoder.encode(adminPassword));
-                        admin.setEmail(adminEmail);
-                        admin.setFullName("System Administrator");
-                        admin.setRole(Role.SUPER_ADMIN);
-                        admin.setEnabled(true);
-                        userRepository.save(admin);
-                    });
+            if (!userRepository.existsByUsername(adminUsername)) {
+                User admin = new User();
+                admin.setUsername(adminUsername);
+                admin.setPassword(passwordEncoder.encode(adminPassword));
+                admin.setEmail(adminEmail);
+                admin.setFullName("System Administrator");
+                admin.setRole(Role.SUPER_ADMIN);
+                admin.setEnabled(true);
+                userRepository.save(admin);
+            }
         };
     }
 }

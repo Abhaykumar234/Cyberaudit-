@@ -1,4 +1,4 @@
-import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom'
+import { Routes, Route, Link, useLocation, Navigate, useNavigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { useAuth } from './context/AuthContext'
 import Dashboard from './pages/Dashboard'
@@ -11,7 +11,13 @@ import Login from './pages/Login'
 
 function ProtectedLayout() {
   const location = useLocation()
+  const navigate = useNavigate()
   const { user, logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
 
   const getActiveNav = () => {
     switch (location.pathname) {
@@ -59,7 +65,7 @@ function ProtectedLayout() {
             {user?.fullName} ({user?.role})
           </span>
           <button
-            onClick={logout}
+            onClick={handleLogout}
             className="px-3 py-1.5 rounded-lg text-body-sm text-text-muted hover:text-text-primary hover:bg-surface-container-high transition-colors"
           >
             Sign out

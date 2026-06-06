@@ -14,12 +14,21 @@ export interface Target {
   createdAt: string
 }
 
+export interface CreateTargetRequest {
+  name: string
+  environment: string
+  targetType: string
+  endpoint: string
+  description?: string
+  assetsInScope?: number
+}
+
 export const getTargets = async (): Promise<Target[]> => {
   const response = await apiClient.get('/targets')
   return response.data
 }
 
-export const createTarget = async (target: Omit<Target, 'id' | 'createdAt'>) => {
+export const createTarget = async (target: CreateTargetRequest) => {
   const response = await apiClient.post('/targets', target)
   return response.data
 }
