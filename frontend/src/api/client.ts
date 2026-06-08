@@ -1,8 +1,6 @@
 import axios from 'axios'
 
-// In dev, falls back to '/api' (Vite proxy handles it)
-// In prod, set VITE_API_BASE_URL=https://your-render-service.onrender.com/api
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://cyberaudit-er9p.onrender.com/api'
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
