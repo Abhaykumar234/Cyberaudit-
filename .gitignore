@@ -36,3 +36,5 @@ logs/
 
 # Old compiled output
 target/classes/
+
+*.log
